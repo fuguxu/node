@@ -5,6 +5,7 @@ const cors = require('koa2-cors');
 const path = require('path');
 const controller = require('./controller');
 const app = new Koa();
+const socketIo = require('socket.io');
 require('./db/insert.js');
 
 app.use(cors({
@@ -50,12 +51,23 @@ app.use(koaBody({
 
 const staticPath = './www';
 
-// app.use(koaStatic(
-//     path.join(__dirname,staticPath)
-// ))
+app.use(koaStatic(
+    path.join(__dirname,staticPath)
+))
 
 app.use(controller());
 
-app.listen(8001);
+
+
+const server = require('http').createServer(app.callback()).listen(8001);
+const io = socketIo.listen(server);
+// app.listen(8001);
+io.on('connection',function(socket){ 
+    socket.on('message', (data)=>{
+        console.log('客户端有消息过来:'+data);
+        io.emit('message2',data);
+    });
+    console.log('有客户端连接');
+});
 
 console.log('server is running at port 8001');
